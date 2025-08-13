@@ -1,139 +1,200 @@
-// app/routes/index.jsx
-import { useFetcher } from "@remix-run/react";
-import { 
-  Page, 
-  Layout, 
-  Card, 
-  TextField, 
-  Button, 
-  Spinner, 
+import React, { useState } from "react";
+import {
+  Page,
+  Layout,
+  Card,
+  Text,
+  Button,
+  TextField,
+  Select,
+  Stack,
+  Thumbnail,
   Banner,
-  TextContainer,
-  Stack
+  Divider,
+  Icon,
 } from "@shopify/polaris";
-import { useState, useEffect } from "react";
+import { ImageIcon, CalendarIcon } from "@shopify/polaris-icons";
 
 export default function Index() {
-  const fetcher = useFetcher();
+  // State variables
+  const [credits, setCredits] = useState(42);
   const [prompt, setPrompt] = useState("");
-  
-  // Extract data and state from fetcher
-  const isSubmitting = fetcher.state === "submitting";
-  const data = fetcher.data;
-  const error = fetcher.data?.error;
+  const [description, setDescription] = useState("");
+  const [caption, setCaption] = useState("");
+  const [hashtags, setHashtags] = useState("");
+  const [previewImage, setPreviewImage] = useState(null);
+  const [postType, setPostType] = useState("instagram");
+  const [tone, setTone] = useState("professional");
 
-  // Handle form submission
-  const handleGenerate = () => {
-    if (!prompt.trim()) {
-      return; // Don't submit empty prompts
+  // Dropdown options
+  const postTypeOptions = [
+    { label: "Instagram Post", value: "instagram" },
+    { label: "Facebook Post", value: "facebook" },
+    { label: "Email Campaign", value: "email" },
+  ];
+
+  const toneOptions = [
+    { label: "Professional", value: "professional" },
+    { label: "Casual", value: "casual" },
+    { label: "Playful", value: "playful" },
+    { label: "Inspirational", value: "inspirational" },
+  ];
+
+  // File upload handler
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file && file.size <= 10 * 1024 * 1024) {
+      setPreviewImage(URL.createObjectURL(file));
+    } else {
+      alert("File is too large! Max 10MB.");
     }
-    
-    fetcher.submit(
-      { prompt: prompt.trim() }, 
-      { method: "post", action: "/api/generate" }
-    );
   };
 
-  // Clear form after successful generation
-  useEffect(() => {
-    if (data?.success && data?.generatedText) {
-      setPrompt(""); // Clear the input after successful generation
-    }
-  }, [data]);
+  // Generate post simulation
+  const handleGenerate = () => {
+    setCaption(
+      "✨ Introducing our latest product — designed for your comfort and style. Limited stock available! 💼"
+    );
+    setHashtags("#AIContent #ShopifyStore #EcommerceGrowth");
+    setCredits((prev) => Math.max(prev - 1, 0));
+  };
 
   return (
-    <Page title="AI Content Generator">
+    <Page title="AI Social Post Studio">
       <Layout>
-        <Layout.Section>
-          {/* Main form card */}
-          <Card sectioned>
-            <Stack vertical spacing="loose">
-              <TextContainer>
-                <p>
-                  Generate engaging content for your Shopify store using AI. 
-                  Enter a product description or marketing idea below.
-                </p>
-              </TextContainer>
-              
-              {/* Product description input */}
-              <TextField
-                label="Product or post description"
-                value={prompt}
-                onChange={setPrompt}
-                placeholder="E.g., A premium wireless Bluetooth headphone with noise cancellation, perfect for music lovers and professionals"
-                multiline={4}
-                disabled={isSubmitting}
-                helpText="Describe your product, promotion, or content idea in detail"
-              />
-              
-              {/* Submit button with loading state */}
-              <div style={{ marginTop: 8 }}>
-                <Button 
-                  primary 
-                  onClick={handleGenerate}
-                  disabled={isSubmitting || !prompt.trim()}
-                  loading={isSubmitting}
-                >
-                  {isSubmitting ? "Generating..." : "Generate AI Content"}
-                </Button>
-              </div>
+        {/* Left Column - Agent Task */}
+        <Layout.Section variant="oneHalf">
+          {/* Credits Banner */}
+          <Banner title={`Credits Remaining: ${credits}`} status="info">
+            Keep an eye on your balance — top up before you run out.
+          </Banner>
+
+          {/* Image Upload */}
+          <Card sectioned title="Upload Image (Optional)">
+            <Stack vertical spacing="tight">
+              <input type="file" accept="image/*" onChange={handleImageUpload} />
+              <Text variant="bodyMd">Max file size: 10MB</Text>
             </Stack>
+          </Card>
+
+          {/* Prompt Input */}
+          <Card sectioned title="Image Prompt">
+            <TextField
+              value={prompt}
+              onChange={setPrompt}
+              placeholder="Describe the image you want the AI to create..."
+              multiline={3}
+            />
+          </Card>
+
+          {/* Optional Description */}
+          <Card sectioned title="Description (Optional)">
+            <TextField
+              value={description}
+              onChange={setDescription}
+              placeholder="Add details about your product or promotion..."
+              multiline={2}
+            />
+          </Card>
+
+          {/* Post Type & Tone */}
+          <Card sectioned>
+            <Stack spacing="tight">
+              <Select
+                label="Post Type"
+                options={postTypeOptions}
+                onChange={setPostType}
+                value={postType}
+              />
+              <Select
+                label="Tone & Style"
+                options={toneOptions}
+                onChange={setTone}
+                value={tone}
+              />
+            </Stack>
+          </Card>
+
+          {/* Generate Button */}
+          <Card sectioned>
+            <Button
+              primary
+              fullWidth
+              onClick={handleGenerate}
+              disabled={credits <= 0}
+            >
+              Generate Post
+            </Button>
           </Card>
         </Layout.Section>
 
-        {/* Loading state */}
-        {isSubmitting && (
-          <Layout.Section>
-            <Card sectioned>
-              <Stack alignment="center" spacing="tight">
-                <Spinner size="small" />
-                <p>Generating your content with AI...</p>
-              </Stack>
-            </Card>
-          </Layout.Section>
-        )}
-
-        {/* Error display */}
-        {error && (
-          <Layout.Section>
-            <Banner status="critical">
-              <p>Error: {error}</p>
-            </Banner>
-          </Layout.Section>
-        )}
-
-        {/* Success response display */}
-        {data?.success && data?.generatedText && (
-          <Layout.Section>
-            <Card sectioned>
-              <Stack vertical spacing="loose">
-                <TextContainer>
-                  <h3>Generated Content</h3>
-                  <p>Here's your AI-generated content:</p>
-                </TextContainer>
-                
-                <Card sectioned>
-                  <div style={{ 
-                    whiteSpace: "pre-wrap", 
-                    lineHeight: "1.6",
-                    fontSize: "14px"
-                  }}>
-                    {data.generatedText}
-                  </div>
-                </Card>
-                
-                <Button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(data.generatedText);
+        {/* Right Column - Live Preview */}
+        <Layout.Section variant="oneHalf">
+          <Card title="Live Preview" sectioned>
+            <Stack vertical spacing="loose" alignment="center">
+              {/* Image Preview */}
+              {previewImage ? (
+                <Thumbnail
+                  source={previewImage}
+                  alt="Generated Preview"
+                  size="large"
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "300px",
+                    border: "1px dashed #ccc",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#f9fafb",
                   }}
-                  size="slim"
                 >
-                  Copy to Clipboard
-                </Button>
-              </Stack>
-            </Card>
-          </Layout.Section>
-        )}
+                  <Icon source={ImageIcon} tone="subdued" />
+                </div>
+              )}
+
+              {/* Caption Preview */}
+              {caption && (
+                <Card subdued sectioned>
+                  <Text variant="headingMd">Caption</Text>
+                  <Text>{caption}</Text>
+                </Card>
+              )}
+
+              {/* Hashtag Preview */}
+              {hashtags && (
+                <Card subdued sectioned>
+                  <Text variant="headingMd">Hashtags</Text>
+                  <Text>{hashtags}</Text>
+                </Card>
+              )}
+
+              {/* Quick Actions */}
+              {caption && (
+                <Stack spacing="tight">
+                  <Button onClick={() => navigator.clipboard.writeText(caption)}>
+                    Copy Caption
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (previewImage) {
+                        const link = document.createElement("a");
+                        link.href = previewImage;
+                        link.download = "generated-post.jpg";
+                        link.click();
+                      }
+                    }}
+                  >
+                    Download Image
+                  </Button>
+                  <Button icon={CalendarIcon}>Schedule Post</Button>
+                </Stack>
+              )}
+            </Stack>
+          </Card>
+        </Layout.Section>
       </Layout>
     </Page>
   );
