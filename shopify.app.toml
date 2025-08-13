@@ -1,0 +1,32 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "40d6838bf9edb8ce8b760596e30cae51"
+name = "VertAiCommerce"
+handle = "vertaicommerce"
+application_url = "https://alice-belong-bet-recommend.trycloudflare.com"
+embedded = true
+
+[build]
+include_config_on_deploy = true
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2025-07"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products"
+
+[auth]
+redirect_urls = ["https://alice-belong-bet-recommend.trycloudflare.com/auth/callback", "https://alice-belong-bet-recommend.trycloudflare.com/auth/shopify/callback", "https://alice-belong-bet-recommend.trycloudflare.com/api/auth/callback"]
+
+[pos]
+embedded = false
